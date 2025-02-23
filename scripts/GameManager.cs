@@ -13,22 +13,25 @@ public enum GameState
 
 public partial class GameManager : Node
 {
-    public static readonly PackedScene PipesScene = GD.Load<PackedScene>("res://scenes/pipes.tscn");
-    public static readonly int PipeGap = 200;
-    public static readonly int PipeWidth = 52;
-    public static readonly int maxPipeYOffset = 128;
-    public static readonly double FloorOffset = 384;
-    public static GameManager Instance { get; private set; }
-    public static float Speed { get; private set; } = 100f;
-    public static Player Player { get; private set; }
-    public static ScorePanel ScorePanel { get; private set; }
-    public static Control GameStartPanel { get; private set; }
-    public static Control GameOverPanel { get; private set; }
+    const int PIPE_GAP = 200;
+    const int PIPE_WIDTH = 52;
+    const int MAX_PIPE_Y_OFFSET = 128;
+    const double FLOOR_OFFSET = 384;
+    const float SPEED = 100f;
+
     public static GameState State { get; private set; } = GameState.GameStart;
     public static int Score { get; private set; }
+    public static GameManager Instance { get; private set; }
 
-    public static Node2D Floor { get; private set; }
-    private Pipes[] pipes = new Pipes[5];
+    private static readonly PackedScene PipesScene = GD.Load<PackedScene>("res://scenes/pipes.tscn");
+    private Player _player;
+    private ScorePanel _scorePanel;
+    private Control _gameStartPanel;
+    private Control _gameOverPanel;
+
+    private Node2D _floor;
+    private Pipes[] _pipes = new Pipes[5];
+
     public override void _Ready()
     {
         Instance = this;
@@ -47,14 +50,14 @@ public partial class GameManager : Node
 
     private void Init()
     {
-        Player = GetNode<Player>("/root/Main/Stage/Player");
-        ScorePanel = GetNode<ScorePanel>("/root/Main/Stage/ScorePanel");
-        GameStartPanel = GetNode<Control>("/root/Main/Stage/GameStartPanel");
-        GameOverPanel = GetNode<Control>("/root/Main/Stage/GameOverPanel");
-        Floor = GetNode<Node2D>("/root/Main/Stage/Floor");
-        Player.Connect(nameof(Player.SignalName.OnPlayerDeath), Callable.From(OnPlayerDeath));
-        Player.Connect(nameof(Player.SignalName.OnPlayerHitTheFloor), Callable.From(OnPlayerHitTheFloor));
-        Player.Connect(nameof(Player.SignalName.OnPlayerScoreIncrease), Callable.From(OnPlayerScoreIncrease));
+        _player = GetNode<Player>("/root/Main/Stage/Player");
+        _scorePanel = GetNode<ScorePanel>("/root/Main/Stage/ScorePanel");
+        _gameStartPanel = GetNode<Control>("/root/Main/Stage/GameStartPanel");
+        _gameOverPanel = GetNode<Control>("/root/Main/Stage/GameOverPanel");
+        _floor = GetNode<Node2D>("/root/Main/Stage/Floor");
+        _player.Connect(nameof(Player.SignalName.OnPlayerDeath), Callable.From(OnPlayerDeath));
+        _player.Connect(nameof(Player.SignalName.OnPlayerHitTheFloor), Callable.From(OnPlayerHitTheFloor));
+        _player.Connect(nameof(Player.SignalName.OnPlayerScoreIncrease), Callable.From(OnPlayerScoreIncrease));
         CreatePipes();
         Score = 0;
     }
@@ -63,30 +66,30 @@ public partial class GameManager : Node
     {
         int spriteNumber = GD.RandRange(1, 2);
 
-        for (int i = 0; i < pipes.Length; i++)
+        for (int i = 0; i < _pipes.Length; i++)
         {
-            pipes[i] = PipesScene.Instantiate() as Pipes;
-            pipes[i].SpriteNumber = spriteNumber;
+            _pipes[i] = PipesScene.Instantiate() as Pipes;
+            _pipes[i].SpriteNumber = spriteNumber;
 
-            var pipePositionOffset = GetViewport().GetVisibleRect().Size.X / 2 + PipeWidth / 2;
-            var pipeYPosition = new Random().Next(-maxPipeYOffset, maxPipeYOffset);
+            var pipePositionOffset = GetViewport().GetVisibleRect().Size.X / 2 + PIPE_WIDTH / 2;
+            var pipeYPosition = new Random().Next(-MAX_PIPE_Y_OFFSET, MAX_PIPE_Y_OFFSET);
 
-            pipes[i].Position = new Vector2(pipePositionOffset + i * PipeGap, pipeYPosition);
-            GetNode<Node2D>("/root/Main/Stage/Pipes").AddChild(pipes[i]);
+            _pipes[i].Position = new Vector2(pipePositionOffset + i * PIPE_GAP, pipeYPosition);
+            GetNode<Node2D>("/root/Main/Stage/Pipes").AddChild(_pipes[i]);
         }
     }
 
     private void MovePipes(double delta)
     {
-        foreach (var pipe in pipes)
+        foreach (var pipe in _pipes)
         {
-            pipe.Position += new Vector2(-Speed * (float)delta, 0);
+            pipe.Position += new Vector2(-SPEED * (float)delta, 0);
 
-            if (pipe.Position.X < -pipe.GetViewportRect().Size.X / 2 - PipeWidth / 2)
+            if (pipe.Position.X < -pipe.GetViewportRect().Size.X / 2 - PIPE_WIDTH / 2)
             {
-                var rightMostPipe = pipes.First(item => item.Position.X == pipes.Max(item => item.Position.X));
-                var pipePositionOffset = rightMostPipe.Position.X + PipeGap;
-                var pipeYPosition = new Random().Next(-maxPipeYOffset, maxPipeYOffset);
+                var rightMostPipe = _pipes.First(item => item.Position.X == _pipes.Max(item => item.Position.X));
+                var pipePositionOffset = rightMostPipe.Position.X + PIPE_GAP;
+                var pipeYPosition = new Random().Next(-MAX_PIPE_Y_OFFSET, MAX_PIPE_Y_OFFSET);
                 pipe.PhysicsInterpolationMode = PhysicsInterpolationModeEnum.Off;
                 pipe.Position = new Vector2(pipePositionOffset, pipeYPosition);
                 pipe.PhysicsInterpolationMode = PhysicsInterpolationModeEnum.On;
@@ -96,13 +99,13 @@ public partial class GameManager : Node
 
     private void MoveFloor(double delta)
     {
-        Floor.Position += new Vector2(-Speed * (float)delta, 0);
+        _floor.Position += new Vector2(-SPEED * (float)delta, 0);
 
-        if (Floor.Position.X < -FloorOffset)
+        if (_floor.Position.X < -FLOOR_OFFSET)
         {
-            Floor.PhysicsInterpolationMode = PhysicsInterpolationModeEnum.Off;
-            Floor.Position = new Vector2(0, Floor.Position.Y);
-            Floor.PhysicsInterpolationMode = PhysicsInterpolationModeEnum.On;
+            _floor.PhysicsInterpolationMode = PhysicsInterpolationModeEnum.Off;
+            _floor.Position = new Vector2(0, _floor.Position.Y);
+            _floor.PhysicsInterpolationMode = PhysicsInterpolationModeEnum.On;
         }
     }
 
@@ -113,11 +116,11 @@ public partial class GameManager : Node
             if (State == GameState.GameStart)
             {
                 State = GameState.Playing;
-                Player.Visible = true;
-                GameStartPanel.Visible = false;
-                ScorePanel.Visible = true;
-                Player.ProcessMode = Node.ProcessModeEnum.Pausable;
-                Player.Flap();
+                _player.Visible = true;
+                _gameStartPanel.Visible = false;
+                _scorePanel.Visible = true;
+                _player.ProcessMode = Node.ProcessModeEnum.Pausable;
+                _player.Flap();
             }
         }
 
@@ -134,7 +137,7 @@ public partial class GameManager : Node
 
     private void OnPlayerHitTheFloor()
     {
-        GameOverPanel.Visible = true;
+        _gameOverPanel.Visible = true;
         // wait for 3 seconds and restart the game
         GetTree().CreateTimer(3).Connect(SceneTreeTimer.SignalName.Timeout, Callable.From(RestartGame));
     }
@@ -187,7 +190,7 @@ public partial class GameManager : Node
     private void OnPlayerScoreIncrease()
     {
         Score++;
-        ScorePanel.UpdateScore(Score);
+        _scorePanel.UpdateScore(Score);
         AudioManager.PlaySound("point");
     }
 }

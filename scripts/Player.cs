@@ -9,24 +9,23 @@ public enum PlayerState
 
 public partial class Player : Area2D
 {
-    public float Strength = -300f;
-    public float Speed = 50f;
-    public float floorOffset = 190f;
-    public float tiltAngleRatio = 0.08f;
-    public PlayerState State { get; private set; } = PlayerState.Alive;
+    const float STRENGTH = -300f;
+    const float FLOOR_OFFSET = 190f;
+    const float TITLT_ANGLE_RATIO = 0.08f;
 
     [Signal] public delegate void OnPlayerDeathEventHandler();
     [Signal] public delegate void OnPlayerHitTheFloorEventHandler();
     [Signal] public delegate void OnPlayerScoreIncreaseEventHandler();
 
-    private AnimatedSprite2D sprite;
-    private Vector2 direction;
+    public PlayerState State { get; private set; } = PlayerState.Alive;
+    private AnimatedSprite2D _sprite;
+    private Vector2 _direction;
 
     public override void _Ready()
     {
         string spriteName = "AnimatedSprite" + GD.RandRange(1, 3);
-        sprite = GetNode<AnimatedSprite2D>(spriteName);
-        sprite.Visible = true;
+        _sprite = GetNode<AnimatedSprite2D>(spriteName);
+        _sprite.Visible = true;
         State = PlayerState.Alive;
         Gravity = 1000f;
         AreaEntered += OnAreaEntered;
@@ -42,14 +41,14 @@ public partial class Player : Area2D
 
     override public void _PhysicsProcess(double delta)
     {
-        direction.Y += (float)(Gravity * delta);
+        _direction.Y += (float)(Gravity * delta);
 
-        var nextPosition = Position + direction * (float)delta;
+        var nextPosition = Position + _direction * (float)delta;
 
-        if (nextPosition.Y > floorOffset)
+        if (nextPosition.Y > FLOOR_OFFSET)
         {
-            nextPosition.Y = floorOffset;
-            direction.Y = 0;
+            nextPosition.Y = FLOOR_OFFSET;
+            _direction.Y = 0;
         }
 
         Position = nextPosition;
@@ -64,14 +63,14 @@ public partial class Player : Area2D
             return;
         }
 
-        direction.Y = Strength;
+        _direction.Y = STRENGTH;
         AudioManager.PlaySound("wing");
     }
 
     private void RotateSprite()
     {
         // slightly tilt the sprite up based on the direction
-        var angle = direction.Y * tiltAngleRatio;
+        var angle = _direction.Y * TITLT_ANGLE_RATIO;
 
         Rotation = Mathf.DegToRad(angle);
     }
@@ -95,14 +94,14 @@ public partial class Player : Area2D
         }
 
         AudioManager.PlaySound("hit");
-        sprite.Play("dead");
+        _sprite.Play("dead");
         State = PlayerState.Dead;
-        direction = Vector2.Zero;
+        _direction = Vector2.Zero;
         EmitSignal(nameof(SignalName.OnPlayerDeath));
 
         await ToSignal(GetTree().CreateTimer(0.2f), SceneTreeTimer.SignalName.Timeout);
 
-        if (direction.Y != 0)
+        if (_direction.Y != 0)
         {
             AudioManager.PlaySound("die");
         }
