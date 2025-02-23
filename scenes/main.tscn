@@ -1,0 +1,235 @@
+[gd_scene load_steps=29 format=3 uid="uid://8gpja0e85n6r"]
+
+[ext_resource type="Shader" uid="uid://ctxa66pdee2po" path="res://shaders/tile_shader.gdshader" id="1_0wfyh"]
+[ext_resource type="Texture2D" uid="uid://0wyk22oq47j3" path="res://assets/background-day.png" id="1_o5qli"]
+[ext_resource type="Texture2D" uid="uid://dcrbvoowjpf0i" path="res://assets/yellowbird-downflap.png" id="3_tbgi4"]
+[ext_resource type="Texture2D" uid="uid://brip8fqsbmdum" path="res://assets/base.png" id="3_tefeu"]
+[ext_resource type="Script" uid="uid://bprbxt8bbc5un" path="res://scripts/Player.cs" id="4_o6xl0"]
+[ext_resource type="Texture2D" uid="uid://dh4frsjiv8qlo" path="res://assets/yellowbird-midflap.png" id="4_tefeu"]
+[ext_resource type="Texture2D" uid="uid://dolb18fri30xi" path="res://assets/yellowbird-upflap.png" id="5_o6xl0"]
+[ext_resource type="Texture2D" uid="uid://ci3yw4nhe78vj" path="res://assets/bluebird-midflap.png" id="7_yc10j"]
+[ext_resource type="Texture2D" uid="uid://eq2p11n14qnh" path="res://assets/gameover.png" id="8_a8y0u"]
+[ext_resource type="Texture2D" uid="uid://ciubyfd8srfol" path="res://assets/bluebird-downflap.png" id="8_jscy8"]
+[ext_resource type="Script" uid="uid://c27h3qbjw0i7v" path="res://scripts/AudioManager.cs" id="8_tipki"]
+[ext_resource type="Script" uid="uid://5lcactwwkj77" path="res://scripts/ScorePanel.cs" id="8_trceg"]
+[ext_resource type="AudioStream" uid="uid://cijf8vfn56ac0" path="res://sounds/wing.ogg" id="9_eb6dy"]
+[ext_resource type="Texture2D" uid="uid://dc10pyhx652ls" path="res://assets/message.png" id="9_jkv2x"]
+[ext_resource type="Texture2D" uid="uid://fh67pru7wb3m" path="res://assets/bluebird-upflap.png" id="9_pm3ni"]
+[ext_resource type="AudioStream" uid="uid://bjo7rb5dlmlu5" path="res://sounds/point.ogg" id="10_trceg"]
+[ext_resource type="Texture2D" uid="uid://dcwt53sflih8q" path="res://assets/redbird-midflap.png" id="10_y6deb"]
+[ext_resource type="AudioStream" uid="uid://bofjpyftr8b1c" path="res://sounds/hit.ogg" id="11_a8y0u"]
+[ext_resource type="Texture2D" uid="uid://cyr5m2sqveqf3" path="res://assets/redbird-downflap.png" id="11_og1vs"]
+[ext_resource type="Texture2D" uid="uid://qysmxwjnk5xy" path="res://assets/redbird-upflap.png" id="12_2wyq8"]
+[ext_resource type="AudioStream" uid="uid://ditmh6etfkki8" path="res://sounds/die.ogg" id="12_jkv2x"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_0wfyh"]
+shader = ExtResource("1_0wfyh")
+shader_parameter/tiling = Vector2(3, 1)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_0wfyh"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_tefeu")
+}],
+"loop": false,
+"name": &"dead",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_tbgi4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_tefeu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_o6xl0")
+}],
+"loop": true,
+"name": &"flying",
+"speed": 8.0
+}]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_vxglm"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("7_yc10j")
+}],
+"loop": false,
+"name": &"dead",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_jscy8")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_yc10j")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_pm3ni")
+}],
+"loop": true,
+"name": &"flying",
+"speed": 8.0
+}]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_2f3dj"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("10_y6deb")
+}],
+"loop": false,
+"name": &"dead",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("11_og1vs")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_y6deb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_2wyq8")
+}],
+"loop": true,
+"name": &"flying",
+"speed": 8.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_sugp2"]
+radius = 12.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_o6xl0"]
+shader = ExtResource("1_0wfyh")
+shader_parameter/tiling = Vector2(5, 1)
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_eb6dy"]
+
+[node name="Main" type="Node2D"]
+
+[node name="Background" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_0wfyh")
+position = Vector2(432, 256)
+scale = Vector2(3, 1)
+texture = ExtResource("1_o5qli")
+
+[node name="Stage" type="Node2D" parent="."]
+position = Vector2(431, 200)
+
+[node name="Pipes" type="Node2D" parent="Stage"]
+
+[node name="Player" type="Area2D" parent="Stage"]
+process_mode = 4
+visible = false
+collision_mask = 14
+priority = 1
+script = ExtResource("4_o6xl0")
+
+[node name="AnimatedSprite1" type="AnimatedSprite2D" parent="Stage/Player"]
+visible = false
+sprite_frames = SubResource("SpriteFrames_0wfyh")
+animation = &"flying"
+autoplay = "flying"
+
+[node name="AnimatedSprite2" type="AnimatedSprite2D" parent="Stage/Player"]
+visible = false
+sprite_frames = SubResource("SpriteFrames_vxglm")
+animation = &"dead"
+autoplay = "flying"
+
+[node name="AnimatedSprite3" type="AnimatedSprite2D" parent="Stage/Player"]
+visible = false
+sprite_frames = SubResource("SpriteFrames_2f3dj")
+animation = &"dead"
+autoplay = "flying"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Stage/Player"]
+shape = SubResource("CircleShape2D_sugp2")
+
+[node name="Floor" type="Area2D" parent="Stage" groups=["Floor"]]
+position = Vector2(0, 257)
+collision_layer = 4
+
+[node name="Sprite" type="Sprite2D" parent="Stage/Floor"]
+material = SubResource("ShaderMaterial_o6xl0")
+scale = Vector2(5, 1)
+texture = ExtResource("3_tefeu")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Stage/Floor"]
+position = Vector2(0, -56)
+shape = SubResource("WorldBoundaryShape2D_eb6dy")
+
+[node name="GameOverPanel" type="TextureRect" parent="Stage"]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -96.0
+offset_top = -42.0
+offset_right = 96.0
+grow_horizontal = 2
+grow_vertical = 0
+texture = ExtResource("8_a8y0u")
+
+[node name="GameStartPanel" type="TextureRect" parent="Stage"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -92.0
+offset_top = -133.5
+offset_right = 92.0
+offset_bottom = 133.5
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("9_jkv2x")
+
+[node name="ScorePanel" type="Control" parent="Stage" node_paths=PackedStringArray("DigitContainer")]
+visible = false
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -367.0
+offset_top = -160.0
+offset_right = -327.0
+offset_bottom = -137.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("8_trceg")
+DigitContainer = NodePath("DigitContainer")
+
+[node name="DigitContainer" type="HBoxContainer" parent="Stage/ScorePanel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+alignment = 1
+
+[node name="AudioManager" type="Node" parent="."]
+script = ExtResource("8_tipki")
+
+[node name="wing" type="AudioStreamPlayer2D" parent="AudioManager"]
+position = Vector2(0, 1)
+stream = ExtResource("9_eb6dy")
+
+[node name="point" type="AudioStreamPlayer2D" parent="AudioManager"]
+position = Vector2(0, 1)
+stream = ExtResource("10_trceg")
+
+[node name="hit" type="AudioStreamPlayer2D" parent="AudioManager"]
+position = Vector2(0, 1)
+stream = ExtResource("11_a8y0u")
+
+[node name="die" type="AudioStreamPlayer2D" parent="AudioManager"]
+position = Vector2(0, 1)
+stream = ExtResource("12_jkv2x")
